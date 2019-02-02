@@ -21,12 +21,14 @@ defmodule FacebookBotWeb.FacebookController do
   end
 
   def webhook(conn, %{"entry" => entries, "object" => "page"}) do
-    Enum.each(entries, fn entry ->
-      FacebookHandler.handler_entry(entry)
+    Task.Supervisor.async_nolink(SlackTool.TaskSupervisor, fn ->
+      Enum.each(entries, fn entry ->
+        FacebookHandler.handler_entry(entry)
+      end)
     end)
 
     conn
-    |> Plug.Conn.resp(200, "ok")
+    |> Plug.Conn.resp(200, "")
     |> Plug.Conn.send_resp()
   end
 end

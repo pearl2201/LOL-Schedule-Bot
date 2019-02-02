@@ -15,6 +15,7 @@ defmodule FacebookBot.Application do
       FacebookBotWeb.Endpoint,
       # Starts a worker by calling: FacebookBot.Worker.start_link(arg)
       # {FacebookBot.Worker, arg},
+      {Task.Supervisor, name: FacebookBot.TaskSupervisor},
       worker(FacebookBot.Scheduler, []),
       {FacebookBot.Startup, name: Startup}
     ]

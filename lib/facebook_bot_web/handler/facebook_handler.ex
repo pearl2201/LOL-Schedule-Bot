@@ -108,7 +108,6 @@ defmodule FacebookBotWeb.FacebookHandler do
 
   def send_league_list(recipientId, type_action) do
     {:ok, leagues} = LolHandler.fetch_league()
-    IO.inspect(leagues)
 
     buttons =
       Enum.chunk_every(leagues, 3)
@@ -129,8 +128,6 @@ defmodule FacebookBotWeb.FacebookHandler do
             end)
         }
       end)
-
-    IO.inspect(buttons)
 
     messageData = %{
       "recipient" => %{
@@ -226,8 +223,6 @@ defmodule FacebookBotWeb.FacebookHandler do
   end
 
   def callSendAPI(messageData) do
-    IO.inspect(@uri_messenger)
-
     HTTPoison.post(
       @uri_messenger,
       Poison.encode!(messageData, pretty: true),
@@ -236,28 +231,5 @@ defmodule FacebookBotWeb.FacebookHandler do
       ]
     )
     |> IO.inspect()
-
-    # request({
-    #   uri: 'https://graph.facebook.com/v2.6/me/messages',
-    #   qs: { access_token: PAGE_ACCESS_TOKEN },
-    #   method: 'POST',
-    #   json: messageData
-
-    # }, function (error, response, body) {
-    #   if (!error && response.statusCode == 200) {
-    #     var recipientId = body.recipient_id;
-    #     var messageId = body.message_id;
-
-    #     if (messageId) {
-    #       console.log("Successfully sent message with id %s to recipient %s", 
-    #         messageId, recipientId);
-    #     } else {
-    #     console.log("Successfully called Send API for recipient %s", 
-    #       recipientId);
-    #     }
-    #   } else {
-    #     console.error("Failed calling Send API", response.statusCode, response.statusMessage, body.error);
-    #   }
-    # });  
   end
 end
