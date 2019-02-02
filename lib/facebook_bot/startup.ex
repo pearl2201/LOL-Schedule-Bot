@@ -18,7 +18,7 @@ defmodule FacebookBot.Startup do
   def send_messenger_profile(:gretting) do
     data = %{
       "get_started" => %{
-        "payload" => "Update Schedule LOL Esport"
+        "payload" => "GET_STARTED"
       },
       "greeting" => [
         %{

@@ -9,32 +9,77 @@ defmodule FacebookBotWeb.FacebookHandler do
   end
 
   def handler_entry(entry) do
-    IO.inspect(entry)
-    IO.inspect(entry["messaging"])
+    # IO.inspect(entry)
+    # IO.inspect(entry["messaging"])
 
     Enum.each(entry["messaging"], fn message ->
-      IO.inspect(message)
-
       cond do
         message["postback"] ->
           cmd = message["postback"]["payload"]
           senderId = message["sender"]["id"]
 
-          case cmd do
-            "GET_LIST_TO_UNSUBCRIBE_PAYLOAD" ->
-              send_response_list_to_unsubcribe(senderId)
+          cond do
+            cmd == "GET_LIST_TO_UNSUBCRIBE_PAYLOAD" ->
+              send_league_list(senderId, "unsubcribe")
 
-            "GET_LIST_TO_SUBCRIBE_PAYLOAD" ->
-              send_response_list_to_subcribe(senderId)
+            cmd == "GET_LIST_TO_SUBCRIBE_PAYLOAD" ->
+              send_league_list(senderId, "subcribe")
 
-            "GET_MATCH_RESULT_PAYLOAD" ->
+            cmd == "GET_MATCH_RESULT_PAYLOAD" ->
               send_response_list_to_get_result(senderId)
 
-            _ ->
+            cmd == "GET_STARTED" ->
+              send_tutorial(senderId)
+
+            String.starts_with?(cmd, "GET_LEAGUE") ->
+              cmd_split = cmd |> String.split("-")
+              idLeague = cmd_split |> Enum.at(2)
+              action = cmd_split |> Enum.at(2)
+
+            true ->
               IO.inspect("No identify command")
           end
+
+        true ->
+          IO.insecpt("Don't know type command")
       end
     end)
+  end
+
+  def send_tutorial(recipientId) do
+    messageData = %{
+      "recipient" => %{
+        "id" => recipientId
+      },
+      "message" => %{
+        "attachment" => %{
+          "type" => "template",
+          "payload" => %{
+            "template_type" => "button",
+            "text" => "What do you want to do next?",
+            "buttons" => [
+              %{
+                "title" => "Subcribe",
+                "type" => "postback",
+                "payload" => "GET_LIST_TO_SUBCRIBE_PAYLOAD"
+              },
+              %{
+                "title" => "UnSubcribe",
+                "type" => "postback",
+                "payload" => "GET_LIST_TO_UNSUBCRIBE_PAYLOAD"
+              },
+              %{
+                "title" => "Result",
+                "type" => "postback",
+                "payload" => "GET_MATCH_RESULT_PAYLOAD"
+              }
+            ]
+          }
+        }
+      }
+    }
+
+    callSendAPI(messageData)
   end
 
   def build_element(leagues, id) do
@@ -61,7 +106,7 @@ defmodule FacebookBotWeb.FacebookHandler do
     }
   end
 
-  def send_response_list_to_subcribe(recipientId) do
+  def send_league_list(recipientId, type_action) do
     {:ok, leagues} = LolHandler.fetch_league()
     IO.inspect(leagues)
 
@@ -78,7 +123,7 @@ defmodule FacebookBotWeb.FacebookHandler do
             Enum.map(x, fn league ->
               %{
                 "type" => "postback",
-                "payload" => "GET_TEAM_TO_SUBCRIBE_LANGUAGE=#{league["id"]}",
+                "payload" => "get_league-#{type_action}-#{league["id"]}",
                 "title" => league["slug"]
               }
             end)
@@ -103,6 +148,9 @@ defmodule FacebookBotWeb.FacebookHandler do
     }
 
     callSendAPI(messageData)
+  end
+
+  def send_team_list(recipientId, type_action, idLeague) do
   end
 
   def send_response_list_to_unsubcribe(recipientId) do
