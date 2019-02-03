@@ -1,5 +1,5 @@
 defmodule FacebookBotWeb.LolHandler do
-  @x_api_key "0TvQnueqKa5mxJntVWt0w4LpLfEkrV1Ta8rQBb9Z"
+  @x_api_key Application.fetch_env!(:facebook_bot, :x_api_key)
   @url_league "https://prod-relapi.ewp.gg/persisted/gw/getLeagues?hl=en-US"
   @url_schedule "https://prod-relapi.ewp.gg/persisted/gw/getSchedule?hl=en-US&leagueId="
   @url_tournaments "https://prod-relapi.ewp.gg/persisted/gw/getTournamentsForLeague?hl=en-US&leagueId="

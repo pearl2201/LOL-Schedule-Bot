@@ -1,7 +1,7 @@
 defmodule FacebookBot.Startup do
   use Task
 
-  @page_token_access "EAAfd3Hvvjl8BAA9XsKrOJkoNZCwAiF4zcZAlYB0H2c8HkeYRZCQmZAOH4kDOM8g9PrWmljZBH0qI7ZAZBBOQcwLr20Vl2J85ykfuE5WbsPMiBiEZB1oC9WTsBagDPYuT7uv1MvQDYTXBAUNf8yYfkCW7qRq7YmZAvpJX7DQbK2PkIYgZDZD"
+  @page_token_access Application.fetch_env!(:facebook_bot, :page_access_token)
   @uri_update_messenger_profile "https://graph.facebook.com/v2.6/me/messenger_profile?access_token=#{
                                   @page_token_access
                                 }"

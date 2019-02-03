@@ -2,6 +2,8 @@ defmodule FacebookBotWeb.FacebookController do
   use FacebookBotWeb, :controller
   alias FacebookBotWeb.FacebookHandler
 
+  @fb_app_verify_token Application.fetch_env!(:facebook_bot, :fb_app_verify_token)
+
   def index(conn, _params) do
     render(conn, "index.html")
   end
@@ -11,7 +13,7 @@ defmodule FacebookBotWeb.FacebookController do
         "hub.mode" => hub_mode,
         "hub.verify_token" => hub_verify_token
       }) do
-    if hub_verify_token == "lol_schedule_bot" do
+    if hub_verify_token == @fb_app_verify_token do
       conn
       |> Plug.Conn.resp(200, hub_challenge)
       |> Plug.Conn.send_resp()

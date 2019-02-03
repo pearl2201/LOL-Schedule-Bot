@@ -1,6 +1,8 @@
 defmodule FacebookBotWeb.Router_Header_Verify_Signature do
   import Plug.Conn
 
+  @fb_app_secret Application.fetch_env!(:facebook_bot, :fb_app_secret)
+
   def init(opts), do: opts
 
   def call(conn, _opts) do
@@ -13,7 +15,7 @@ defmodule FacebookBotWeb.Router_Header_Verify_Signature do
       {:ok, body, conn} = read_body(conn)
 
       expectedHash =
-        :crypto.hmac(:sha, "f848d9080990b0aaff692663ef9e284b", conn.assigns.raw_body)
+        :crypto.hmac(:sha, @fb_app_secret, conn.assigns.raw_body)
         |> Base.encode16()
         |> String.downcase()
 

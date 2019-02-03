@@ -10,7 +10,10 @@ use Mix.Config
 config :facebook_bot,
   ecto_repos: [FacebookBot.Repo],
   page_access_token:
-    "EAAfd3Hvvjl8BANHKvl7ylJgVaPVEQkZAiSEV1rF4kIyYqz5ChXRi3z7Y9ZBGR0F5dXmqC4khuHaiNzGzdZAQefbkCWTqEFEm9sZAnuZBwyaWdGZA1BtuaiyxqvVrzZBZC9O494R5YeCZBAlPvFyZC6JvVgRc9d9iIbmjZCO7e6r0Rti9gZDZD"
+    "EAAfd3Hvvjl8BAA9XsKrOJkoNZCwAiF4zcZAlYB0H2c8HkeYRZCQmZAOH4kDOM8g9PrWmljZBH0qI7ZAZBBOQcwLr20Vl2J85ykfuE5WbsPMiBiEZB1oC9WTsBagDPYuT7uv1MvQDYTXBAUNf8yYfkCW7qRq7YmZAvpJX7DQbK2PkIYgZDZD",
+  x_api_key: "0TvQnueqKa5mxJntVWt0w4LpLfEkrV1Ta8rQBb9Z",
+  fb_app_secret: "f848d9080990b0aaff692663ef9e284b",
+  fb_app_verify_token: "lol_schedule_bot"
 
 # Configures the endpoint
 config :facebook_bot, FacebookBotWeb.Endpoint,
