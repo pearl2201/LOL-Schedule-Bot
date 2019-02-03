@@ -16,14 +16,8 @@ defmodule FacebookBotWeb.Router do
   end
 
   pipeline :facebook_api_post do
-    plug Router_Header_Verify_Signature
     plug :accepts, ["json"]
-
-    plug Plug.Parsers,
-      parsers: [:urlencoded, :json],
-      pass: ["text/*"],
-      body_reader: {CacheBodyReader, :read_body, []},
-      json_decoder: Poison
+    plug Router_Header_Verify_Signature
   end
 
   scope "/", FacebookBotWeb do

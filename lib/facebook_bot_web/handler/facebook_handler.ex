@@ -45,13 +45,14 @@ defmodule FacebookBotWeb.FacebookHandler do
 
             String.starts_with?(cmd, "team-") ->
               cmd_split = cmd |> String.split("-")
-              idTeam = cmd_split |> Enum.at(2)
+              codeTeam = cmd_split |> Enum.at(3)
+              codeLeague = cmd_split |> Enum.at(2)
               action = cmd_split |> Enum.at(1)
 
               if action == "subcribe" do
-                subcribe(senderId, idTeam)
+                subcribe_team(senderId, codeTeam, codeLeague)
               else
-                unsubcribe(senderId, idTeam)
+                unsubcribe_team(senderId, codeTeam, codeLeague)
               end
 
             true ->
@@ -64,7 +65,7 @@ defmodule FacebookBotWeb.FacebookHandler do
     end)
   end
 
-  def subcribe_team(recipientId, code) do
+  def subcribe_team(recipientId, codeTeam, codeLeague) do
     messageData = %{
       "recipient" => %{
         "id" => recipientId
@@ -78,7 +79,7 @@ defmodule FacebookBotWeb.FacebookHandler do
     callSendAPI(messageData)
   end
 
-  def unsubcribe_team(recipientId, code) do
+  def unsubcribe_team(recipientId, codeTeam, codeLeague) do
     messageData = %{
       "recipient" => %{
         "id" => recipientId
@@ -175,7 +176,12 @@ defmodule FacebookBotWeb.FacebookHandler do
   end
 
   def build_message_team_list(recipientId, type_action, idLeague) do
+    {:ok, leagues} = LolHandler.fetch_league()
+    IO.inspect(leagues)
+    league = Enum.find(leagues, fn x -> x["id"] == "#{idLeague}" end)
     {:ok, teams} = LolHandler.fetch_league(idLeague)
+
+    IO.inspect(league)
 
     buttons =
       Enum.chunk_every(teams, 3)
@@ -190,7 +196,7 @@ defmodule FacebookBotWeb.FacebookHandler do
             Enum.map(x, fn team ->
               %{
                 "type" => "postback",
-                "payload" => "team-#{type_action}-#{team["code"]}",
+                "payload" => "team-#{type_action}-#{league["name"]}-#{team["code"]}",
                 "title" => team["code"]
               }
             end)
