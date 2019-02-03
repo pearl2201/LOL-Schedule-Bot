@@ -26,15 +26,33 @@ defmodule FacebookBotWeb.FacebookHandler do
               send_league_list(senderId, "subcribe")
 
             cmd == "GET_MATCH_RESULT_PAYLOAD" ->
-              send_response_list_to_get_result(senderId)
+              send_league_list(senderId, "result")
 
             cmd == "GET_STARTED" ->
               send_tutorial(senderId)
 
-            String.starts_with?(cmd, "GET_LEAGUE") ->
+            String.starts_with?(cmd, "get_league-result") ->
               cmd_split = cmd |> String.split("-")
               idLeague = cmd_split |> Enum.at(2)
-              action = cmd_split |> Enum.at(2)
+              action = cmd_split |> Enum.at(1)
+              send_response_list_to_get_result(senderId, idLeague)
+
+            String.starts_with?(cmd, "get_league") ->
+              cmd_split = cmd |> String.split("-")
+              idLeague = cmd_split |> Enum.at(2)
+              action = cmd_split |> Enum.at(1)
+              send_team_list(senderId, action, idLeague)
+
+            String.starts_with?(cmd, "team-") ->
+              cmd_split = cmd |> String.split("-")
+              idTeam = cmd_split |> Enum.at(2)
+              action = cmd_split |> Enum.at(1)
+
+              if action == "subcribe" do
+                subcribe(senderId, idTeam)
+              else
+                unsubcribe(senderId, idTeam)
+              end
 
             true ->
               IO.inspect("No identify command")
@@ -44,6 +62,34 @@ defmodule FacebookBotWeb.FacebookHandler do
           IO.insecpt("Don't know type command")
       end
     end)
+  end
+
+  def subcribe_team(recipientId, code) do
+    messageData = %{
+      "recipient" => %{
+        "id" => recipientId
+      },
+      "message" => %{
+        "text" => "subcribe success",
+        "metadata" => "lol_result"
+      }
+    }
+
+    callSendAPI(messageData)
+  end
+
+  def unsubcribe_team(recipientId, code) do
+    messageData = %{
+      "recipient" => %{
+        "id" => recipientId
+      },
+      "message" => %{
+        "text" => "unsubcribe success",
+        "metadata" => "lol_result"
+      }
+    }
+
+    callSendAPI(messageData)
   end
 
   def send_tutorial(recipientId) do
@@ -80,30 +126,6 @@ defmodule FacebookBotWeb.FacebookHandler do
     }
 
     callSendAPI(messageData)
-  end
-
-  def build_element(leagues, id) do
-    league = Enum.at(leagues, id)
-
-    # %{
-    #   "content_type" => "text",
-    #   "title" => league["slug"],
-    #   "payload" => "GET_TEAM_TO_SUBCRIBE_LANGUAGE=#{league["id"]}",
-    #   "image_url" => league["image"]
-    # }
-
-    %{
-      "title" => league["slug"],
-      "image_url" => league["image"],
-      "subtitle" => league["region"],
-      "buttons" => [
-        %{
-          "type" => "postback",
-          "payload" => "GET_TEAM_TO_SUBCRIBE_LANGUAGE=#{league["id"]}",
-          "title" => league["slug"]
-        }
-      ]
-    }
   end
 
   def send_league_list(recipientId, type_action) do
@@ -148,10 +170,34 @@ defmodule FacebookBotWeb.FacebookHandler do
   end
 
   def send_team_list(recipientId, type_action, idLeague) do
+    messageData = build_message_team_list(recipientId, type_action, idLeague)
+    callSendAPI(messageData)
   end
 
-  def send_response_list_to_unsubcribe(recipientId) do
-    messageData = %{
+  def build_message_team_list(recipientId, type_action, idLeague) do
+    {:ok, teams} = LolHandler.fetch_league(idLeague)
+
+    buttons =
+      Enum.chunk_every(teams, 3)
+      |> Enum.with_index()
+      |> Enum.map(fn {x, k} ->
+        start_index = k * 3
+        end_index = k * 3 + 3
+
+        %{
+          "title" => "Team #{start_index}-#{end_index}",
+          "buttons" =>
+            Enum.map(x, fn team ->
+              %{
+                "type" => "postback",
+                "payload" => "team-#{type_action}-#{team["code"]}",
+                "title" => team["code"]
+              }
+            end)
+        }
+      end)
+
+    %{
       "recipient" => %{
         "id" => recipientId
       },
@@ -159,63 +205,37 @@ defmodule FacebookBotWeb.FacebookHandler do
         "attachment" => %{
           "type" => "template",
           "payload" => %{
-            "template_type" => "button",
-            "text" => "This is test text",
-            "buttons" => [
-              %{
-                "type" => "web_url",
-                "url" => "https://www.oculus.com/en-us/rift/",
-                "title" => "Open Web URL"
-              },
-              %{
-                "type" => "postback",
-                "title" => "Trigger Postback",
-                "payload" => "DEVELOPER_DEFINED_PAYLOAD"
-              },
-              %{
-                "type" => "phone_number",
-                "title" => "Call Phone Number",
-                "payload" => "+16505551234"
-              }
-            ]
+            "template_type" => "generic",
+            "elements" => buttons
           }
         }
       }
     }
-
-    callSendAPI(messageData)
   end
 
-  def send_response_list_to_get_result(recipientId) do
+  def send_response_list_to_get_result(recipientId, leagueID) do
+    events = LolHandler.fetch_schedule(leagueID)
+
+    messageText =
+      events
+      |> Enum.any(fn x -> x["state"] == "completed" end)
+      |> Enum.map(fn event ->
+        team1 = Enum.at(event["match"]["teams"], 0)
+        team2 = Enum.at(event["match"]["teams"], 1)
+
+        "#{team1["code"]} #{team1["result"]["outcome"]} - #{team1["result"]["outcome"]} #{
+          team1["code"]
+        } "
+      end)
+      |> Enum.join()
+
     messageData = %{
       "recipient" => %{
         "id" => recipientId
       },
       "message" => %{
-        "attachment" => %{
-          "type" => "template",
-          "payload" => %{
-            "template_type" => "button",
-            "text" => "This is test text",
-            "buttons" => [
-              %{
-                "type" => "web_url",
-                "url" => "https://www.oculus.com/en-us/rift/",
-                "title" => "Open Web URL"
-              },
-              %{
-                "type" => "postback",
-                "title" => "Trigger Postback",
-                "payload" => "DEVELOPER_DEFINED_PAYLOAD"
-              },
-              %{
-                "type" => "phone_number",
-                "title" => "Call Phone Number",
-                "payload" => "+16505551234"
-              }
-            ]
-          }
-        }
+        "text" => messageText,
+        "metadata" => "lol_result"
       }
     }
 

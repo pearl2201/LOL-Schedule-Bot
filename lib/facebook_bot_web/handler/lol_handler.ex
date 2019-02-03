@@ -113,4 +113,41 @@ defmodule FacebookBotWeb.LolHandler do
         end)
       end)
   end
+
+  def fetch_league(leagueID) do
+    {:ok, tournaments} = fetch_tournaments(leagueID)
+
+    tournament =
+      Enum.find(tournaments, fn tournament ->
+        {:ok, startDate} = Date.from_iso8601(tournament["startDate"])
+        {:ok, endDate} = Date.from_iso8601(tournament["endDate"])
+        currentDate = Date.utc_today()
+
+        Date.compare(currentDate, startDate) != :lt and Date.compare(currentDate, endDate) != :gt
+      end)
+
+    {:ok, standings_json} = fetch_standing(tournament["id"])
+
+    standings = standings_json["data"]["standings"]
+
+    if standings do
+      standing = Enum.at(standings, 0)
+      stage = Enum.at(standing["stages"], 0)
+      section = Enum.at(stage["sections"], 0)
+      rankings = section["rankings"]
+
+      if rankings do
+        teams =
+          for ranking <- rankings do
+            ranking["teams"]
+          end
+
+        {:ok, Enum.reduce(teams, [], fn x, acc -> x ++ acc end)}
+      else
+        {:error}
+      end
+    else
+      {:error}
+    end
+  end
 end
