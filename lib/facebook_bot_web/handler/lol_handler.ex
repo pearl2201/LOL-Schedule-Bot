@@ -114,6 +114,9 @@ defmodule FacebookBotWeb.LolHandler do
       end)
   end
 
+  @doc """
+  Only fetch first section of regular season
+  """
   def fetch_league(leagueID) do
     {:ok, tournaments} = fetch_tournaments(leagueID)
 

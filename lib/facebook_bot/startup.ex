@@ -1,4 +1,8 @@
 defmodule FacebookBot.Startup do
+  @moduledoc """
+  Send Bot profile messenger
+  """
+
   use Task
 
   @page_token_access Application.fetch_env!(:facebook_bot, :page_access_token)
@@ -11,11 +15,10 @@ defmodule FacebookBot.Startup do
   end
 
   def run(arg) do
-    send_messenger_profile(:gretting)
-    send_messenger_profile(:persistent_menu)
+    send_messenger_profile()
   end
 
-  def send_messenger_profile(:gretting) do
+  def send_messenger_profile() do
     data = %{
       "get_started" => %{
         "payload" => "GET_STARTED"
@@ -25,16 +28,7 @@ defmodule FacebookBot.Startup do
           "locale" => "default",
           "text" => "Hello {{user_first_name}}! This is a tool for subcribe lol esport schedule!"
         }
-      ]
-    }
-
-    HTTPoison.post(@uri_update_messenger_profile, Poison.encode!(data), [
-      {"Content-Type", "application/json"}
-    ])
-  end
-
-  def send_messenger_profile(:persistent_menu) do
-    data = %{
+      ],
       "persistent_menu" => [
         %{
           "locale" => "default",
@@ -60,7 +54,7 @@ defmodule FacebookBot.Startup do
       ]
     }
 
-    HTTPoison.post(@uri_update_messenger_profile, Poison.encode!(data, pretty: true), [
+    HTTPoison.post(@uri_update_messenger_profile, Poison.encode!(data), [
       {"Content-Type", "application/json"}
     ])
   end

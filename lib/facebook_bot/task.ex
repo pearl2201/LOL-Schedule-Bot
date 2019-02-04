@@ -1,4 +1,8 @@
 defmodule FacebookBot.Task do
+  @moduledoc """
+  fetch schedule from lol esport and notify to subcribers
+  """
+
   alias FacebookBotWeb.LolHandler
 
   @url "https://watch.na.lolesports.com/schedule"

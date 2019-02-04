@@ -1,4 +1,8 @@
 defmodule FacebookBotWeb.Router_Header_Verify_Signature do
+  @moduledoc """
+  Plug Plugin for verify header signature of facebook request
+  """
+
   import Plug.Conn
 
   @fb_app_secret Application.fetch_env!(:facebook_bot, :fb_app_secret)
@@ -34,14 +38,4 @@ defmodule FacebookBotWeb.Router_Header_Verify_Signature do
       |> halt()
     end
   end
-
-  # defp _call(conn, {:ok, [version]}) do
-  #   assign(conn, :version, version)
-  # end
-
-  # defp _call(conn, _) do
-  #   conn
-  #   |> send_resp(404, "Not Found")
-  #   |> halt()
-  # end
 end
