@@ -1,10 +1,17 @@
 defmodule FacebookBotWeb.LolHandler do
+  @moduledoc """
+  fetch data from https://watch.na.lolesports.com/schedule
+  """
+
   @x_api_key Application.fetch_env!(:facebook_bot, :x_api_key)
   @url_league "https://prod-relapi.ewp.gg/persisted/gw/getLeagues?hl=en-US"
   @url_schedule "https://prod-relapi.ewp.gg/persisted/gw/getSchedule?hl=en-US&leagueId="
   @url_tournaments "https://prod-relapi.ewp.gg/persisted/gw/getTournamentsForLeague?hl=en-US&leagueId="
   @url_standing "https://prod-relapi.ewp.gg/persisted/gw/getStandings?hl=en-US&tournamentId="
 
+  @doc """
+  Fetch all league lol esport in https://watch.na.lolesports.com/schedule
+  """
   def fetch_league() do
     case HTTPoison.get(@url_league, [{"x-api-key", @x_api_key}]) do
       {:ok, %HTTPoison.Response{status_code: 200, body: body}} ->
@@ -20,8 +27,11 @@ defmodule FacebookBotWeb.LolHandler do
     end
   end
 
-  def fetch_schedule(regionID) do
-    case HTTPoison.get("#{@url_schedule}#{regionID}", [{"x-api-key", @x_api_key}]) do
+  @doc """
+  Fetch schedule of league
+  """
+  def fetch_schedule(leagueID) do
+    case HTTPoison.get("#{@url_schedule}#{leagueID}", [{"x-api-key", @x_api_key}]) do
       {:ok, %HTTPoison.Response{status_code: 200, body: body}} ->
         response_json = Poison.decode!(body)
         events = response_json["data"]["schedule"]["events"]
@@ -36,8 +46,11 @@ defmodule FacebookBotWeb.LolHandler do
     end
   end
 
-  def fetch_tournaments(regionID) do
-    case HTTPoison.get("#{@url_tournaments}#{regionID}", [{"x-api-key", @x_api_key}]) do
+  @doc """
+  Fetch all tournament of league
+  """
+  def fetch_tournaments(leagueID) do
+    case HTTPoison.get("#{@url_tournaments}#{leagueID}", [{"x-api-key", @x_api_key}]) do
       {:ok, %HTTPoison.Response{status_code: 200, body: body}} ->
         response_json = Poison.decode!(body)
         tournaments = Enum.at(response_json["data"]["leagues"], 0)["tournaments"]
@@ -52,6 +65,9 @@ defmodule FacebookBotWeb.LolHandler do
     end
   end
 
+  @doc """
+  Fetch League Standing of Tourname
+  """
   def fetch_standing(tournamentID) do
     case HTTPoison.get("#{@url_standing}#{tournamentID}", [{"x-api-key", @x_api_key}]) do
       {:ok, %HTTPoison.Response{status_code: 200, body: body}} ->
@@ -73,45 +89,44 @@ defmodule FacebookBotWeb.LolHandler do
     {:ok, leagues} = fetch_league()
     # IO.inspect(leagues)
 
-    m =
-      Enum.find(leagues, fn league ->
-        {:ok, tournaments} = fetch_tournaments(league["id"])
+    Enum.find(leagues, fn league ->
+      {:ok, tournaments} = fetch_tournaments(league["id"])
 
-        Enum.find(tournaments, fn tournament ->
-          {:ok, standings_json} = fetch_standing(tournament["id"])
+      Enum.find(tournaments, fn tournament ->
+        {:ok, standings_json} = fetch_standing(tournament["id"])
 
-          standings = standings_json["data"]["standings"]
+        standings = standings_json["data"]["standings"]
 
-          if standings do
-            Enum.find(standings, fn standing ->
-              Enum.find(standing["stages"], fn stage ->
-                # IO.inspect(stage)
+        if standings do
+          Enum.find(standings, fn standing ->
+            Enum.find(standing["stages"], fn stage ->
+              # IO.inspect(stage)
 
-                Enum.find(stage["sections"], fn section ->
-                  # IO.inspect(section)
-                  rankings = section["rankings"]
+              Enum.find(stage["sections"], fn section ->
+                # IO.inspect(section)
+                rankings = section["rankings"]
 
-                  if rankings do
-                    Enum.find(rankings, fn ranking ->
-                      # IO.inspect(ranking)
+                if rankings do
+                  Enum.find(rankings, fn ranking ->
+                    # IO.inspect(ranking)
 
-                      Enum.find(ranking["teams"], fn team ->
-                        if team["code"] == teamcode do
-                          IO.inspect(team)
-                          team
-                        else
-                          # IO.inspect(team["name"])
-                          nil
-                        end
-                      end)
+                    Enum.find(ranking["teams"], fn team ->
+                      if team["code"] == teamcode do
+                        IO.inspect(team)
+                        team
+                      else
+                        # IO.inspect(team["name"])
+                        nil
+                      end
                     end)
-                  end
-                end)
+                  end)
+                end
               end)
             end)
-          end
-        end)
+          end)
+        end
       end)
+    end)
   end
 
   @doc """

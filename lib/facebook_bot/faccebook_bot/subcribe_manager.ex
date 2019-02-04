@@ -1,6 +1,6 @@
 defmodule FacebookBot.FaccebookBot.Subcribe_Manager do
   @moduledoc """
-  The boundary for the Blog system.
+  The boundary for the subcribe.
   """
 
   import Ecto.Query, warn: false
@@ -19,7 +19,7 @@ defmodule FacebookBot.FaccebookBot.Subcribe_Manager do
         })
         |> Repo.insert()
 
-      subcribe ->
+      _ ->
         nil
     end
   end
@@ -40,16 +40,30 @@ defmodule FacebookBot.FaccebookBot.Subcribe_Manager do
     |> Repo.get_by(league: codeLeague, team: codeTeam)
   end
 
+  @doc """
+  Query subcribe of a match
+  """
+  def query(codeLeague, codeTeam1, codeTeam2) do
+    query =
+      from(
+        p in Subcribe,
+        where: p.league == ^codeLeague and (p.team == ^codeTeam1 or p.team == ^codeTeam2)
+      )
+
+    Repo.all(query)
+  end
+
   def query_subcribed_leagues(user) do
-    query = from(p in Subcribe, where: p.user == user, distinct: p.league, select: p.league)
+    query = from(p in Subcribe, where: p.user == ^user, distinct: p.league, select: p.league)
     Repo.all(query)
   end
 
   def query_subcribed_teams(user, league) do
-    from(
-      p in Subcribe,
-      where: p.user == user and p.league == league
-    )
+    query =
+      from(
+        p in Subcribe,
+        where: p.user == ^user and p.league == ^league
+      )
 
     Repo.all(query)
   end

@@ -1,4 +1,7 @@
 defmodule FacebookBotWeb.FacebookController do
+  @moduledoc """
+  handler facebook webhook 
+  """
   use FacebookBotWeb, :controller
   alias FacebookBotWeb.FacebookHandler
 
@@ -8,6 +11,9 @@ defmodule FacebookBotWeb.FacebookController do
     render(conn, "index.html")
   end
 
+  @doc """
+  handler facebook webhook's challenge
+  """
   def webhook(conn, %{
         "hub.challenge" => hub_challenge,
         "hub.mode" => hub_mode,
@@ -22,8 +28,11 @@ defmodule FacebookBotWeb.FacebookController do
     end
   end
 
+  @doc """
+  handler facebook webhook's event
+  """
   def webhook(conn, %{"entry" => entries, "object" => "page"}) do
-    Task.Supervisor.async_nolink(SlackTool.TaskSupervisor, fn ->
+    Task.Supervisor.async_nolink(FacebookBot.TaskSupervisor, fn ->
       Enum.each(entries, fn entry ->
         FacebookHandler.handler_entry(entry)
       end)

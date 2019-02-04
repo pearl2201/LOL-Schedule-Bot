@@ -70,7 +70,7 @@ defmodule FacebookBotWeb.FacebookHandler do
           end
 
         true ->
-          IO.insecpt("Don't know type command")
+          IO.inspect("Don't know type command")
       end
     end)
   end
@@ -238,7 +238,7 @@ defmodule FacebookBotWeb.FacebookHandler do
 
     unsubcribed_teams =
       Enum.filter(teams, fn team ->
-        Enum.all(subcribed_teams_code, fn x -> team["code"] != x end)
+        Enum.all?(subcribed_teams_code, fn x -> team["code"] != x.team end)
       end)
 
     messageData =
@@ -259,7 +259,7 @@ defmodule FacebookBotWeb.FacebookHandler do
 
     subcribed_teams =
       Enum.filter(teams, fn team ->
-        Enum.any?(subcribed_teams_code, fn x -> team["code"] == x end)
+        Enum.any?(subcribed_teams_code, fn x -> team["code"] == x.team end)
       end)
 
     messageData =
@@ -312,18 +312,17 @@ defmodule FacebookBotWeb.FacebookHandler do
   send recent result of a league to sender
   """
   def send_response_list_to_get_result(recipientId, leagueID) do
-    events = LolHandler.fetch_schedule(leagueID)
+    {:ok, events} = LolHandler.fetch_schedule(leagueID)
 
     messageText =
       events
-      |> Enum.any(fn x -> x["state"] == "completed" end)
+      |> Enum.filter(fn x -> x["state"] == "completed" end)
       |> Enum.map(fn event ->
         team1 = Enum.at(event["match"]["teams"], 0)
         team2 = Enum.at(event["match"]["teams"], 1)
 
-        "#{team1["code"]} #{team1["result"]["outcome"]} - #{team1["result"]["outcome"]} #{
-          team1["code"]
-        } "
+        "#{team1["code"]} #{team1["result"]["outcome"]} - 
+        #{team1["result"]["outcome"]} #{team1["code"]}\n"
       end)
       |> Enum.join()
 
@@ -341,6 +340,50 @@ defmodule FacebookBotWeb.FacebookHandler do
   end
 
   @doc """
+  notify schedule to subcribe
+  """
+  def notify_schedule() do
+    {:ok, leagues} = LolHandler.fetch_league()
+
+    Enum.each(leagues, fn league ->
+      {:ok, events} = LolHandler.fetch_schedule(league["id"])
+
+      events_notify =
+        events
+        |> Enum.filter(fn x ->
+          {:ok, startDatetime, 0} = DateTime.from_iso8601(x["startTime"])
+          currentDatetime = DateTime.utc_now()
+
+          DateTime.compare(currentDatetime, startDatetime) != :gt and
+            DateTime.diff(currentDatetime, startDatetime) <= 30 and x["state"] == "unstarted"
+        end)
+
+      events_notify
+      |> Enum.each(fn event ->
+        team1 = Enum.at(event["match"]["teams"], 0)
+        team2 = Enum.at(event["match"]["teams"], 1)
+
+        subcribers = Subcribe_Manager.query(event["league"]["name"], team1["code"], team2["code"])
+
+        Enum.each(subcribers, fn subcriber ->
+          messageData = %{
+            "recipient" => %{
+              "id" => subcriber.user
+            },
+            "message" => %{
+              "text" =>
+                "#{event["startTime"]}: #{team1["code"]} vs #{team2["code"]}.\n Check video stream at https://www.youtube.com/channel/UCvqRdlKsE5Q8mf8YXbdIJLw",
+              "metadata" => "lol_notify_schedule"
+            }
+          }
+
+          callSendAPI(messageData)
+        end)
+      end)
+    end)
+  end
+
+  @doc """
   send post request to facebook messenger graph api
   """
   def callSendAPI(messageData) do
@@ -351,6 +394,5 @@ defmodule FacebookBotWeb.FacebookHandler do
         {"Content-Type", "application/json"}
       ]
     )
-    |> IO.inspect()
   end
 end

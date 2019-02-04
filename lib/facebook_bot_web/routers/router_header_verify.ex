@@ -14,9 +14,8 @@ defmodule FacebookBotWeb.Router_Header_Verify_Signature do
 
     if signature do
       elements = String.split(signature, "=")
-      method = Enum.at(elements, 0)
+
       signatureHash = Enum.at(elements, 1)
-      {:ok, body, conn} = read_body(conn)
 
       expectedHash =
         :crypto.hmac(:sha, @fb_app_secret, conn.assigns.raw_body)

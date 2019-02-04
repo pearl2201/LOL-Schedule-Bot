@@ -45,7 +45,7 @@ defmodule FacebookBot.Startup do
               "payload" => "GET_LIST_TO_UNSUBCRIBE_PAYLOAD"
             },
             %{
-              "title" => "Result",
+              "title" => "Recent Result",
               "type" => "postback",
               "payload" => "GET_MATCH_RESULT_PAYLOAD"
             }
