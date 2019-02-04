@@ -321,8 +321,9 @@ defmodule FacebookBotWeb.FacebookHandler do
         team1 = Enum.at(event["match"]["teams"], 0)
         team2 = Enum.at(event["match"]["teams"], 1)
 
-        "#{team1["code"]} #{team1["result"]["outcome"]} - 
-        #{team1["result"]["outcome"]} #{team1["code"]}\n"
+        "#{event["startTime"]}: #{team1["code"]} #{team1["result"]["outcome"]} - #{
+          team2["result"]["outcome"]
+        } #{team2["code"]}\n"
       end)
       |> Enum.join()
 
