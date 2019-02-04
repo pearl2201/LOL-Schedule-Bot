@@ -9,11 +9,10 @@ use Mix.Config
 
 config :facebook_bot,
   ecto_repos: [FacebookBot.Repo],
-  page_access_token:
-    "EAAfd3Hvvjl8BAA9XsKrOJkoNZCwAiF4zcZAlYB0H2c8HkeYRZCQmZAOH4kDOM8g9PrWmljZBH0qI7ZAZBBOQcwLr20Vl2J85ykfuE5WbsPMiBiEZB1oC9WTsBagDPYuT7uv1MvQDYTXBAUNf8yYfkCW7qRq7YmZAvpJX7DQbK2PkIYgZDZD",
-  x_api_key: "0TvQnueqKa5mxJntVWt0w4LpLfEkrV1Ta8rQBb9Z",
-  fb_app_secret: "f848d9080990b0aaff692663ef9e284b",
-  fb_app_verify_token: "lol_schedule_bot"
+  page_access_token: System.get_env("PAGE_ACCESS_TOKEN"),
+  x_api_key: System.get_env("X_API_KEY"),
+  fb_app_secret: System.get_env("FB_APP_SECRET"),
+  fb_app_verify_token: System.get_env("FB_APP_VERIFY_TOKEN")
 
 # Configures the endpoint
 config :facebook_bot, FacebookBotWeb.Endpoint,
@@ -36,7 +35,7 @@ import_config "#{Mix.env()}.exs"
 
 config :facebook_bot, FacebookBot.Scheduler,
   jobs: [
-    # Every minute
+    # Every 30 minute
 
     phoenix_job: [
       schedule: "*/30 * * * *",
